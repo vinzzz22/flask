@@ -118,11 +118,12 @@ class Blueprint(_PackageBoundObject):
     def __init__(self, name, import_name, static_folder=None,
                  static_url_path=None, template_folder=None,
                  url_prefix=None, subdomain=None, url_defaults=None,
-                 root_path=None):
+                 root_path=None, host=None):
         _PackageBoundObject.__init__(self, import_name, template_folder,
                                      root_path=root_path)
         self.name = name
         self.url_prefix = url_prefix
+        self.host = host
         self.subdomain = subdomain
         self.static_folder = static_folder
         self.static_url_path = static_url_path
@@ -180,7 +181,8 @@ class Blueprint(_PackageBoundObject):
         if self.has_static_folder:
             state.add_url_rule(
                 self.static_url_path + '/<path:filename>',
-                view_func=self.send_static_file, endpoint='static'
+                view_func=self.send_static_file, endpoint='static',
+                host=self.host
             )
 
         for deferred in self.deferred_functions:
@@ -204,6 +206,7 @@ class Blueprint(_PackageBoundObject):
             assert '.' not in endpoint, "Blueprint endpoints should not contain dots"
         if view_func and hasattr(view_func, '__name__'):
             assert '.' not in view_func.__name__, "Blueprint view function name should not contain dots"
+        options['host'] = self.host
         self.record(lambda s:
             s.add_url_rule(rule, endpoint, view_func, **options))
 
